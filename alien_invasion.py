@@ -48,6 +48,10 @@ class AlienInvasion:
         self.hard_button = Button(self, "Hard", (255, 255, 0), 60)
         self.nightmare_button = Button(self, "Nightmare", (255, 0, 0), 120)
 
+        # NOTE: Pygame mixer init, may want to create a class
+        pygame.mixer.init()
+        self.ship_laser_sound = pygame.mixer.Sound('sounds/LaserGun.wav')
+
     def run_game(self):
         """Start the main loop for the game."""
         while True:
@@ -149,6 +153,9 @@ class AlienInvasion:
         if len(self.bullets) < self.settings.bullets_allowed:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
+
+            # play ship laser shot sound
+            self.ship_laser_sound.play()
 
     def _update_bullets(self):
         """Update position of bullets and get rid of old bullets."""
