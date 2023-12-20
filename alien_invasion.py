@@ -52,6 +52,7 @@ class AlienInvasion:
         pygame.mixer.init()
         self.ship_laser_sound = pygame.mixer.Sound('sounds/LaserGun.wav')
         self.level_success = pygame.mixer.Sound('sounds/success.wav')
+        self.player_hit = pygame.mixer.Sound('sounds/player_hit.wav')
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -218,6 +219,9 @@ class AlienInvasion:
             # Decrement ships_left, and update scoreboard.
             self.stats.ships_left -= 1
             self.sb.prep_ships()
+
+            # Play ship hit sound
+            self.player_hit.play()
 
             # Get rid of any remaining aliens and bullets.
             self.aliens.empty()
