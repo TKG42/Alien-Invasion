@@ -51,6 +51,7 @@ class AlienInvasion:
         # NOTE: Pygame mixer init, may want to create a class
         pygame.mixer.init()
         self.ship_laser_sound = pygame.mixer.Sound('sounds/LaserGun.wav')
+        self.level_success = pygame.mixer.Sound('sounds/success.wav')
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -194,6 +195,9 @@ class AlienInvasion:
         # Increase level.
         self.stats.level += 1
         self.sb.prep_level()
+
+        # Play sound to indicate new level starting
+        self.level_success.play()
 
     def _update_aliens(self):
         """Check if the fleet is at an edge,
