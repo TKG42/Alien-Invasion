@@ -18,6 +18,7 @@ class Settings:
         self.bullet_height = 15
         self.bullet_color = (60, 60, 60)
         self.bullets_allowed = 3
+        self.bullet_speed = 1
 
         # Alien settings
         self.fleet_drop_speed = 10
@@ -27,6 +28,13 @@ class Settings:
 
         # How quickly the alien point values increase
         self.score_scale = 1.5
+
+        # Power up settings
+        self.powerup_bullet_width = 10 # wider bullet width
+        self.powerup_bullet_height = 40 # longer bullet height
+        self.powerup_bullet_color = (255, 0, 0) 
+        self.powerup_bullet_speed = 1.5 * self.bullet_speed # faster bullets.
+        self.powerup_speed = 1.5
 
         self.initialize_dynamic_settings()
 

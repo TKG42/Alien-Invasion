@@ -7,6 +7,7 @@ import sys
 from time import sleep
 
 import pygame
+import random
 from settings import Settings
 from game_stats import GameStats
 from scoreboard import Scoreboard
@@ -14,6 +15,7 @@ from ship import Ship
 from bullet import Bullet
 from alien import Alien
 from button import Button
+from powerup import PowerUp
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -48,12 +50,26 @@ class AlienInvasion:
         self.hard_button = Button(self, "Hard", (255, 255, 0), 60)
         self.nightmare_button = Button(self, "Nightmare", (255, 0, 0), 120)
 
-        # NOTE: Pygame mixer init, may want to create a class
+        # NOTE: For more sound files, use a dictionary. Example below
+        # self.sounds = {"laser: pygame.mixer.Sound('sounds/LaserGun.wav)"}
+        # self.sounds["laser"].play()
         pygame.mixer.init()
         self.ship_laser_sound = pygame.mixer.Sound('sounds/LaserGun.wav')
         self.level_success_sound = pygame.mixer.Sound('sounds/success.wav')
         self.player_hit_sound = pygame.mixer.Sound('sounds/player_hit.wav')
         self.game_over_sound = pygame.mixer.Sound('sounds/game_over.wav')
+        self.powerup_bullet_sound = pygame.mixer.Sound('sounds/blaster.wav')
+        self.powerup_sound = pygame.mixer.Sound('sounds/powerup.wav')
+
+        # Initialize powerups group
+        self.powerups = pygame.sprite.Group() 
+
+        # Initialize power up states and timers
+        self.powerup_active = False
+        self.powerup_start_time = 0
+        self.powerup_duration = 5000 # duration in milliseconds
+        self.powerup_counter = 0
+        self.powerup_spawned_this_level = False
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -64,6 +80,8 @@ class AlienInvasion:
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
+                self._update_powerups()
+                self._update_powerup_timer()
                 
             self._update_screen() 
     
@@ -154,11 +172,19 @@ class AlienInvasion:
     def _fire_bullet(self):
         """Create a new bullet and add it to the bullets group."""
         if len(self.bullets) < self.settings.bullets_allowed:
-            new_bullet = Bullet(self)
+            powerup_active = self.check_if_powerup_active() 
+            new_bullet = Bullet(self, powerup_active)
             self.bullets.add(new_bullet)
 
-            # play ship laser shot sound
-            self.ship_laser_sound.play()
+            # play ship laser shot sound or powerup sound
+            if self.powerup_active:
+                self.powerup_bullet_sound.play()
+            else:
+                self.ship_laser_sound.play()
+
+    def check_if_powerup_active(self) :
+        """Check if the powerup is active."""
+        return self.powerup_active # This could be a boolean attribute you toggle.
 
     def _update_bullets(self):
         """Update position of bullets and get rid of old bullets."""
@@ -183,9 +209,47 @@ class AlienInvasion:
                 self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
             self.sb.check_high_score()
+            self.powerup_counter += len(aliens)
+            if self.powerup_counter >= random.randint(3, 15):
+                self.powerup_counter = 0
+                self._create_powerup()
 
         if not self.aliens:
             self._start_new_level()
+    
+    def _create_powerup(self):
+        """Create a power-up and add it to the power-ups group."""
+        if not self.powerups and not self.powerup_spawned_this_level: # Make sure only one powerup is present
+            powerup = PowerUp(self)
+            powerup.rect.x = random.randint(0, self.settings.screen_width - powerup.rect.width)
+            powerup.rect.y = self.ship.rect.y - powerup.rect.height + 20 # Align with the ships y position. 
+            self.powerups.add(powerup)
+            self.powerup_spawned_this_level = True
+
+    def _update_powerups(self):
+        """Update the position of power-ups and get rid of old power-ups."""
+        for powerup in self.powerups.copy():        
+            if pygame.sprite.spritecollideany(self.ship, self.powerups):
+                self.powerup_sound.play()
+                self._powerup_collected()
+                self.powerups.remove(powerup)
+                # Brief pause
+                sleep(0.5)
+
+    def _powerup_collected(self):
+        """Handle powerup collection."""
+        self.powerup_start_time = pygame.time.get_ticks()
+        self.powerup_active = True
+        # TODO: start a timer for the power-up duration
+
+    def _update_powerup_timer(self):
+        """Update the power up state based on the timer."""
+        if self.powerup_active and pygame.time.get_ticks() - self.powerup_start_time > self.powerup_duration:
+            self._end_powerup()
+
+    def _end_powerup(self):
+        """Revert changes made by the power up"""
+        self.powerup_active = False
 
     def _start_new_level(self):
         """starts new level if there are no more aliens"""
@@ -197,6 +261,9 @@ class AlienInvasion:
         # Increase level.
         self.stats.level += 1
         self.sb.prep_level()
+
+        # Reset powerup flag
+        self.powerup_spawned_this_level = False
 
         # Play sound to indicate new level starting
         self.level_success_sound.play()
@@ -237,7 +304,7 @@ class AlienInvasion:
         else:
             # Play game over sound
             self.game_over_sound.play()
-            
+
             self.stats.game_active = False
             pygame.mouse.set_visible(True)
 
@@ -304,6 +371,9 @@ class AlienInvasion:
 
         # Draw the score information.
         self.sb.show_score()
+
+        # Draw power up
+        self.powerups.draw(self.screen)
 
         # Draw the play button if the game is inactive.
         if not self.stats.game_active:
