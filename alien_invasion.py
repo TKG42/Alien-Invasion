@@ -222,7 +222,7 @@ class AlienInvasion:
         if not self.powerups and not self.powerup_spawned_this_level: # Make sure only one powerup is present
             powerup = PowerUp(self)
             powerup.rect.x = random.randint(0, self.settings.screen_width - powerup.rect.width)
-            powerup.rect.y = self.ship.rect.y - powerup.rect.height + 20 # Align with the ships y position. 
+            powerup.rect.y = self.ship.rect.y - powerup.rect.height + 50 # Align with the ships y position. 
             self.powerups.add(powerup)
             self.powerup_spawned_this_level = True
 

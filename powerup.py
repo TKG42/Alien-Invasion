@@ -12,7 +12,7 @@ class PowerUp(Sprite):
         self.settings = ai_game.settings
 
         # Load the power-up image and set its rect attribute.
-        self.image = pygame.image.load('images/cutestar_100x100.png')
+        self.image = pygame.image.load('images/powerup_t60x60.png')
         self.rect = self.image.get_rect()
 
         # Start each new power-up near the top left of the screen.
